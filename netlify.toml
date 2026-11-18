@@ -1,0 +1,7 @@
+# The Netlify copy of the site has no server functions. Forward order API calls
+# to the Vercel deployment so checkout works on both URLs.
+[[redirects]]
+  from = "/api/*"
+  to = "https://ivanalicioustreats.vercel.app/api/:splat"
+  status = 200
+  force = true

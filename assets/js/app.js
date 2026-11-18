@@ -123,7 +123,7 @@
         '<p>' + esc(c.sub) + '</p><div class="itt-grid">';
       PRODUCTS.filter(function (x) { return x.cat === c.cat; }).forEach(function (p) {
         var media = p.img
-          ? '<img src="' + esc(p.img) + '" alt="' + esc(p.name) + '" width="300" height="300" loading="lazy" decoding="async">'
+          ? '<img src="' + esc(p.img) + '" alt="' + esc(p.name) + '" width="300" height="300">'
           : '<span role="img" aria-label="' + esc(p.name) + '">' + p.emoji + '</span>';
         html += '<article class="itt-card"><div class="itt-emoji">' + media + '</div>' +
           '<div class="itt-cbody"><h4 class="itt-cname" style="margin:0;">' + esc(p.name) + '</h4><div class="itt-cdesc">' + esc(p.desc) + '</div>' +
