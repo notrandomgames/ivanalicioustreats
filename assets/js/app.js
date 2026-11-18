@@ -163,14 +163,13 @@
       '<div style="font-family:\'Caveat\',cursive;font-size:26px;font-weight:700;">Order received</div>' +
       (o.orderNumber ? '<div>Reference <span class="itt-ref">' + esc(o.orderNumber) + '</span></div>' : '') +
       '<p style="color:var(--muted);font-size:13px;margin-top:10px;">' +
-      (state.copied ? 'Your order has been copied. ' : '') +
-      'To confirm it, send it to <b>@' + esc(IG) + '</b> on Instagram.</p>' +
-      '<ol class="itt-steps"><li>' + (state.copied ? 'Order copied ✓' : 'Tap <b>Copy order</b>') + '</li>' +
-      '<li>Tap <b>Open Instagram</b> and paste it into the chat</li>' +
+      'Your order is saved. To confirm it, send it to <b>@' + esc(IG) + '</b> on Instagram.</p>' +
+      '<ol class="itt-steps"><li>Tap <b>Copy order &amp; open Instagram</b></li>' +
+      '<li>Paste it into the chat with @' + esc(IG) + ' and send</li>' +
       '<li>Pay by M-Pesa on pickup/delivery</li></ol>' +
       '<pre>' + esc(state.orderText) + '</pre>' +
-      '<button type="button" class="itt-btn2" id="copyAgain" style="background:var(--primary-ink);color:#fff;">📋 Copy order</button>' +
-      '<a class="itt-btn2" href="' + IG_URL + '" target="_blank" rel="noopener noreferrer" style="background:var(--fg);color:var(--bg);">💬 Open Instagram</a>' +
+      '<a class="itt-btn2" id="copyOpen" href="' + IG_URL + '" target="_blank" rel="noopener noreferrer" style="background:var(--primary-ink);color:#fff;">💬 Copy order &amp; open Instagram</a>' +
+      '<button type="button" class="itt-btn2" id="copyAgain" style="background:var(--fg);color:var(--bg);">📋 ' + (state.copied ? 'Copied ✓ — copy again' : 'Copy order only') + '</button>' +
       '<button type="button" class="itt-btn2" id="doneBtn" style="background:none;color:var(--muted);text-decoration:underline;">Done — start a new order</button></div>';
   }
 
@@ -183,6 +182,13 @@
         copyText(state.orderText).then(function (ok) {
           state.copied = ok; renderDrawer(); announce(ok ? 'Order copied' : 'Copy failed — select the text and copy it manually');
         });
+      };
+      // Synchronous copy inside the tap, then the link opens Instagram natively
+      // (no popup blocker issues on iOS/Android).
+      byId('copyOpen').onclick = function () {
+        var ok = legacyCopy(state.orderText);
+        if (!ok && navigator.clipboard) navigator.clipboard.writeText(state.orderText).catch(function () { });
+        state.copied = true;
       };
       byId('doneBtn').onclick = resetAll;
       return;
@@ -234,12 +240,12 @@
     }
     foot += '<div class="itt-total"><span>Total</span><span>' + fmt(final) + '</span></div>';
     if (state.formError) foot += '<div class="itt-alert" role="alert">' + esc(state.formError) + '</div>';
-    var label = !t.count ? 'Add items to order' : (state.showForm ? 'Place order and open Instagram' : 'Checkout');
+    var label = !t.count ? 'Add items to order' : (state.showForm ? 'Place order' : 'Checkout');
     if (state.submitting) label = '<span class="itt-spin" aria-hidden="true"></span>Saving your order…';
     foot += '<button type="button" class="itt-checkout" id="checkoutBtn"' + (!t.count || state.submitting ? ' disabled' : '') +
       (state.submitting ? ' aria-busy="true"' : '') + '>' + label + '</button>';
     if (state.showForm && t.count) {
-      foot += '<p style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px;">We\'ll save your order, copy it and open Instagram — just paste it in the message box. Pay by M-Pesa on pickup/delivery.</p>';
+      foot += '<p style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px;">We\'ll save your order, then you send it to us on Instagram to confirm. Pay by M-Pesa on pickup/delivery.</p>';
     }
 
     inner.innerHTML = head() + '<div class="itt-ditems">' + itemsHtml + '</div><div class="itt-dfoot">' + foot + '</div>';
@@ -374,11 +380,9 @@
         state.orderText = buildOrderText(res.data);
         state.sent = true;
         try { localStorage.removeItem(STORAGE_KEY); } catch (e) { }
-        // Try to copy and open Instagram; if the browser blocks either after the
-        // network wait, the confirmation screen keeps buttons for both.
+        // Pre-copy the order so it's ready to paste; the confirmation screen's
+        // "Copy order & open Instagram" button copies again inside the user's tap.
         copyText(state.orderText).then(function (ok) { state.copied = ok; renderDrawer(); var h = byId('drawerTitle'); if (h) h.focus(); });
-        var w = null;
-        try { w = window.open(IG_URL, '_blank', 'noopener,noreferrer'); } catch (e) { }
         renderDrawer();
         var h = byId('drawerTitle'); if (h) h.focus();
         announce('Order ' + res.data.orderNumber + ' received');

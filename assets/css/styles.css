@@ -98,3 +98,4 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .itt{box-shadow:0 0 0 1px var(--border);}
   .itt-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
 }
+.itt-dfoot > .itt-field{margin-bottom:14px;}
